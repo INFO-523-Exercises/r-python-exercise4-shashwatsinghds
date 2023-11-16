@@ -186,11 +186,17 @@ r2_value <- rsq(eval_data, truth = truth, estimate = estimate)
 ```
 
 ```{r}
-# Output the RMSE and R-squared value to assess the model's goodness of fit
 
 cat("Root mean squared error =", sprintf("%.4f", rmse_value$.estimate), "\n")
+
+```
+-The low value of RMS error shows the model is a good fit.
+
+```{r}
 cat('R-squared =', sprintf("%.4f", r2_value$.estimate), "\n")
 ```
+
+- The R-squared value is desired to be closer to 1. Here, the value is comparatively low suggesting that the data does not fit well to new data.
 
 ## 5) Postprocessing
 
@@ -270,6 +276,7 @@ grid.arrange(plot1, plot2, plot3, plot4, ncol=2)
 ```
 
 - There is noticeable correlation between all variables here specially between X2 and X3.
+
 ```{r}
 # Split the dataset with correlated variables into training and test sets
 
@@ -393,12 +400,9 @@ ggplot(results, aes(x = Sum_of_Absolute_Weights)) +
   labs(x = "Sum of Absolute Weights", y = "Error rate") +
   theme_minimal()
 ```
-
+- There is significant error when model is implemented on the test data.
 ```{r}
-# Output a summary table of model equations, error rates, and sum of absolute weights
-
 results
-
  
 ```
 
@@ -478,6 +482,7 @@ final_results
 
 - Ridge regression is a statistical method for linear regression that is used to solve problems of multicollinearity. Multicollinearity occurs when two or more predictor variables in a regression model are highly correlated with each other. This can make it difficult to estimate the true coefficients of the predictor variables, and can lead to inaccurate predictions.
 
+- Here, By tuning the parameter values to 0, it has decreased the error on test data.
 
 
 # Lasso Regression
@@ -648,7 +653,7 @@ cat("Selected alpha =", best_params$penalty, "\n")
 all_results <- bind_rows(results, ridge_results)
 all_results
 ```
-
+- Hyperparameter tuning is not very effective here for Ridge Regression.
 ```{r}
 # Interpretation:
 # This section perfoormed cross-validation to optimally tune the penalty parameter in ridge regression, enhancing model performance by balancing bias and variance
@@ -699,7 +704,7 @@ lasso_fit <- lasso_wf |>
 
 ```
 
-```{r}
+```{r, warning= False}
 # Perform hyperparameter tuning for the lasso model across a range of penalty values
 
 # Grid of alphas for Lasso
@@ -766,7 +771,4 @@ cat("Selected alpha for Lasso =", best_params_lasso$penalty, "\n")
 lasso_results
 ```
 
-```{r}
-# Interpretation
-# Employs cross-validation to find the best penalty value for lasso regression, aiming to improve model accuracy while performing feature selection by shrinking some coefficients to zero
-```
+- Hyperparameter tuning has performed better to minimise error in the case of Lasso Regression.

@@ -23,6 +23,17 @@ theme_set(theme_bw() + theme(legend.position = "top"))
 
 ```
 
+## Regression
+
+Regression is a modeling technique for predicting quantitative-valued target attributes. The goals for this tutorial are as follows:
+
+1. To provide examples of using different regression methods for the stock prices dataset.
+
+2. To demonstrate the problem of model overfitting due to correlated attributes in the data.
+
+3. To illustrate how regularization can be used to avoid model overfitting.
+
+
 # Synthetic Data Generation
 
 ```{r}
@@ -41,3 +52,177 @@ y <- y_true + matrix(rnorm(numInstances), ncol=1)
 ```
 
 - Here we have set seed and created Synthetic data randomly. We are using function which is relating y to x as y=3x+1. Also added gaussian noise.
+
+
+```{r}
+# Plotting the generated data to visualize the linear relationship
+
+ggplot() +
+  geom_point(aes(x=X, y=y), color="black") +
+  geom_line(aes(x=X, y=y_true), color="blue", linewidth=1) +
+  ggtitle('True function: y = -3X + 1') +
+  xlab('X') +
+  ylab('y')           # Create a scatter plot of the generated data
+
+
+```
+
+
+- The points represent the generated data, and the blue line shows the linear relationship between x and y without the additive gaussian noise.
+
+
+
+## **Multiple Linear Regression**
+
+Given a training set X,y MLR is designed to learn f(X,w)=X^T^w +w~0~ by minimizing the following loss function given a training set
+
+L(y,f(X,w)) = (i=1 to n)∑ \|\|y~i-~ X~i~w-w~0~\|\|
+
+where w (slope) and w0 (intercept) are the regression coefficients.
+
+Given the input dataset, the following steps are performed:
+
+1\. Split the input data into their respective training and test sets.
+
+2\. Fit multiple linear regression to the training data.
+
+3\. Apply the model to the test data.
+
+4\. Evaluate the performance of the model.
+
+5\. Postprocessing: Visualizing the fitted model.
+
+
+## 1) Split Input Data into Training and Test Sets
+
+```{r}
+# This section splits the data into training and test sets
+numTrain <- 20   # number of training instances
+numTest <- numInstances - numTrain
+
+set.seed(123) # For reproducibility
+
+
+
+# Combine X and y into a tibble for easier data manipulation
+data <- tibble(X = X, y = y)
+
+split_obj <- initial_split(data, prop = numTrain/numInstances)
+
+
+
+# Split the dataset into training and testing sets
+train_data <- training(split_obj)
+test_data <- testing(split_obj)
+
+# Extract training and testing data from the split object
+
+# Training sets
+X_train <- train_data$X
+y_train <- train_data$y
+
+# Test sets
+X_test <- test_data$X
+y_test <- test_data$y
+```
+
+## 2) Fit Regression Model to Training Set
+
+```{r}
+# Setting up a linear regression model using the 'lm' engine
+lin_reg_spec <- linear_reg() |> 
+  set_engine("lm")
+
+# Fit the linear regression model to the training data
+lin_reg_fit <- lin_reg_spec |> 
+  fit(y ~ X, data = train_data)
+
+# Interpretation: 
+# This step involves creating a linear regression model using the training data
+
+```
+
+## 3) Apply Model to the Test Set
+
+```{r}
+# This block applies the model to the test data
+
+y_pred_test <- predict(lin_reg_fit, new_data = test_data) |>
+  pull(.pred)
+
+# Interpretation: 
+# Involves predicting the response variable for the test set using the fitted model
+
+```
+
+## 4) Evaluate Model Performance on Test Set
+
+```{r}
+# This block evaluates the performance of the model on the test set
+
+# Create a scatter plot to compare true and predicted values of the response variable for the test set
+ggplot() + 
+  geom_point(aes(x = as.vector(y_test), y = y_pred_test), color = 'black') +
+  ggtitle('Comparing true and predicted values for test set') +
+  xlab('True values for y') +
+  ylab('Predicted values for y')
+
+
+# Interpretation: 
+# This part assesses how well the model predicts the response variable on new data
+
+```
+
+```{r}
+# Organize test data and predictions for model evaluation
+eval_data <- tibble(
+  truth = as.vector(y_test),
+  estimate = y_pred_test
+)
+
+# Calculate and display the Root Mean Squared Error (RMSE) and R squared value of the model
+rmse_value <- rmse(data = eval_data, truth = truth, estimate = estimate)
+r2_value <- rsq(eval_data, truth = truth, estimate = estimate)
+```
+
+```{r}
+# Output the RMSE and R-squared value to assess the model's goodness of fit
+
+cat("Root mean squared error =", sprintf("%.4f", rmse_value$.estimate), "\n")
+cat('R-squared =', sprintf("%.4f", r2_value$.estimate), "\n")
+```
+
+## 5) Postprocessing
+
+```{r}
+# This block involves postprocessing steps after model evaluation
+
+# Extract and display the slope coefficient from the linear regression model
+coef_values <- coef(lin_reg_fit$fit) 
+slope <- coef_values["X"]
+intercept <- coef_values["(Intercept)"]
+
+```
+
+```{r}
+# Output the intercept of the linear regression model
+cat("Slope =", slope, "\n")
+
+cat("Intercept =", intercept, "\n")
+```
+
+```{r}
+# Plot the test data and the predicted linear function, displaying the model's fitted line
+
+ggplot() +
+  geom_point(aes(x = as.vector(X_test), y = as.vector(y_test)), color = 'black') +
+  geom_line(aes(x = as.vector(X_test), y = y_pred_test), color = 'blue', linewidth = 1) +
+  ggtitle(sprintf('Predicted Function: y = %.2fX + %.2f', slope, intercept)) +
+  xlab('X') +
+  ylab('y')
+
+
+
+
+```
+- Created training and test sets. Trained the model on the training data and determined the parameter for the linear regression.

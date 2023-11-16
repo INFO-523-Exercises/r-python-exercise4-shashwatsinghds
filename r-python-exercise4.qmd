@@ -403,3 +403,144 @@ results
 ```
 
 -The code focused on the impact of adding correlated predictors to linear regression models, revealing the trade-off between model complexity and accuracy in predictions
+
+
+# Ridge Regression
+
+```{r}
+# Convert the training and testing sets into data frames for ridge regression
+
+train_data <- tibble(y = y_train, X_train5)
+test_data <- tibble(y = y_test, X_test5)
+```
+
+```{r}
+# Define a ridge regression model with a specified penalty
+
+ridge_spec <- linear_reg(penalty = 0.4, mixture = 1) %>% 
+  set_engine("glmnet")
+```
+
+```{r}
+# Fit the ridge regression model to the training data
+
+ridge_fit <- ridge_spec %>% 
+  fit(y ~ ., data = train_data)
+```
+
+```{r}
+# Predict response variables for both training and testing sets using the ridge model
+
+# Making predictions
+y_pred_train_ridge <- predict(ridge_fit, new_data = train_data)$.pred
+y_pred_test_ridge <- predict(ridge_fit, new_data = test_data)$.pred
+
+
+# Making predictions
+y_pred_train_ridge <- predict(ridge_fit, new_data = train_data)$.pred
+y_pred_test_ridge <- predict(ridge_fit, new_data = train_data)$.pred
+
+```
+
+```{r}
+# Calculate RMSE for ridge model predictions and extract model coefficients
+
+# Calculate RMSE
+calculate_rmse <- function(actual, predicted) {
+  rmse <- sqrt(mean((actual - predicted)^2))
+  rmse
+}
+
+# Extract coefficients
+ridge_coef <- coefficients(ridge_fit$fit)
+
+model6 <- sprintf("%.2f X + %.2f X2 + %.2f X3 + %.2f X4 + %.2f X5 + %.2f", 
+                 ridge_coef[2], ridge_coef[3], ridge_coef[4], 
+                 ridge_coef[5], ridge_coef[6], ridge_coef[1])
+
+values6 <- tibble(
+  Model = model6,
+  Train_error = calculate_rmse(y_train, y_pred_train_ridge),
+  Test_error = calculate_rmse(y_test, y_pred_test_ridge),
+  Sum_of_Absolute_Weights = sum(abs(ridge_coef))
+)
+```
+
+```{r}
+# Combine the ridge regression results into a final summary table
+final_results <- bind_rows(results, values6)
+
+final_results
+
+
+
+```
+
+- Ridge regression is a statistical method for linear regression that is used to solve problems of multicollinearity. Multicollinearity occurs when two or more predictor variables in a regression model are highly correlated with each other. This can make it difficult to estimate the true coefficients of the predictor variables, and can lead to inaccurate predictions.
+
+
+
+# Lasso Regression
+
+```{r}
+# Define the lasso regression model with a specified penalty
+lasso_spec <- linear_reg(penalty = 0.02, mixture = 1) %>% 
+  set_engine("glmnet")
+```
+
+```{r}
+# Prepare the training data in the required format for lasso regression
+
+train_data <- tibble(y = y_train, X1 = X_train5[,1], X2 = X_train5[,2], 
+                     X3 = X_train5[,3], X4 = X_train5[,4], X5 = X_train5[,5])
+
+```
+
+```{r}
+# Fit the lasso regression model to the training data
+
+lasso_fit <- lasso_spec %>%
+  fit(y ~ ., data = train_data)
+```
+
+```{r}
+# Extract the coefficients from the fitted lasso model
+
+lasso_coefs <- lasso_fit$fit$beta[,1]
+```
+
+```{r}
+# Predict response variables for training and testing sets using the lasso model
+
+y_pred_train_lasso <- predict(lasso_fit, new_data = train_data)$.pred
+y_pred_test_lasso <- predict(lasso_fit, new_data = tibble(X1 = X_test5[,1], X2 = X_test5[,2], X3 = X_test5[,3], X4 = X_test5[,4], X5 = X_test5[,5]))$.pred
+
+```
+
+```{r}
+# Convert the lasso model's coefficients into a readable string
+
+model7 <- sprintf("%.2f X + %.2f X2 + %.2f X3 + %.2f X4 + %.2f X5 + %.2f", 
+                  lasso_coefs[2], lasso_coefs[3], lasso_coefs[4], 
+                  lasso_coefs[5], lasso_coefs[6], lasso_fit$fit$a0[1])
+
+values7 <- c(model7, 
+             sqrt(mean((y_train - y_pred_train_lasso)^2)),
+             sqrt(mean((y_test - y_pred_test_lasso)^2)),
+             sum(abs(lasso_coefs[-1])) + abs(lasso_fit$fit$a0[1]))
+```
+
+```{r}
+# Compile the lasso regression results into a summary table
+
+lasso_results <- tibble(Model = "Lasso",
+                        `Train error` = values7[2], 
+                        `Test error` = values7[3], 
+                        `Sum of Absolute Weights` = values7[4])
+
+lasso_results
+
+
+```
+
+- Lasso regression, also known as L1 regularization, is a type of linear regression that uses shrinkage to improve prediction accuracy and interpretability. It achieves this by adding a penalty term to the traditional least squares model, which encourages sparse solutions where some coefficients are forced to be exactly zero. This means that Lasso regression can effectively select relevant features and remove irrelevant ones, leading to a more interpretable model.

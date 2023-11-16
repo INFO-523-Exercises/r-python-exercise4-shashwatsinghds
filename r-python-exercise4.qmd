@@ -704,7 +704,7 @@ lasso_fit <- lasso_wf |>
 
 ```
 
-```{r, warning= False}
+```{r, warning= FALSE}
 # Perform hyperparameter tuning for the lasso model across a range of penalty values
 
 # Grid of alphas for Lasso

@@ -1,0 +1,43 @@
+---
+title: "Regression in R"
+author: "Shashwat Singh"
+format: html
+editor: visual
+---
+
+# Loading Required Packages
+
+```{r}
+# Install necessary packages
+if (!require(pacman))
+  install.packages("pacman")
+
+pacman::p_load(tidymodels,
+               tidyverse,
+               ranger,
+               randomForest,
+               glmnet,
+               gridExtra)
+# Setting up a global theme
+theme_set(theme_bw() + theme(legend.position = "top"))
+
+```
+
+# Synthetic Data Generation
+
+```{r}
+# This block sets parameters for the analysis.
+seed <- 1                   # Set the random seed for reproducibility
+numInstances <- 200         # Define the total number of instances in the dataset
+
+# Set seed
+set.seed(seed)
+
+# Generating data
+X <- matrix(runif(numInstances), ncol=1)
+y_true <- -3*X + 1 
+y <- y_true + matrix(rnorm(numInstances), ncol=1)
+
+```
+
+- Here we have set seed and created Synthetic data randomly. We are using function which is relating y to x as y=3x+1. Also added gaussian noise.
